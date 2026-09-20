@@ -1,4 +1,3 @@
-
 from openai import OpenAI
 from scraper import fetch_website_contents
 
@@ -17,35 +16,32 @@ Provide a short summary of this website.
 If it includes news or announcements, then summarize these too.
 
 """
+
+
 def message_for(website):
-    return  [
-              {"role":"system" , "content":system_prompt},
-              {"role": "user", "content":website}
-            ]
+    return [
+        {"role": "system", "content": system_prompt},
+        {"role": "user", "content": user_prompt_prefix + website},
+    ]
+
 
 def summarize(url):
-    ollama = OpenAI(api_key="ollama",base_url=OLLAMA_BASE_URL)
+    client = OpenAI(api_key="ollama", base_url=OLLAMA_BASE_URL)
     website = fetch_website_contents(url)
 
-    response = ollama.chat.completions.create(
+    response = client.chat.completions.create(
         model=MODEL,
-        message=message_for(website)
+        messages=message_for(website),
     )
-
-   return response.choices[0].message.content
-
+    return response.choices[0].message.content
 
 
 def main():
-    url=input("Enter your URL summarize: ")
+    url = input("Enter the URL to summarize: ")
+    print("\nFetching and summarizing...\n")
     summary = summarize(url)
     print(summary)
 
 
-
-if __name__ == "__main__"
-main()
-
-
-
-
+if __name__ == "__main__":
+    main()
