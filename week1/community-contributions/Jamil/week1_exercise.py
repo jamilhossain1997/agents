@@ -21,7 +21,7 @@ SYSTEM_PROMPT = (
 def build_message(question):
     messages=[
         {"role":"system","content":SYSTEM_PROMPT},
-        {"role":"role","content":question}
+        {"role":"user","content":question}
     ]
     
     return messages
@@ -37,7 +37,7 @@ def ask_gpt(question):
     response = client.chat.completions.create(
         model=MODEL_GPT,
         messages=build_message(question),
-        max_tokens=3000,
+        max_tokens=1000,
         stream=True
     )
     
@@ -50,3 +50,52 @@ def ask_gpt(question):
     print()
     
     return full_text
+
+
+
+
+def ask_ollama(question):
+     client=OpenAI(base_url=OLLAMA_BASE_URL,api_key="ollama")
+     response = client.chat.completions.create(
+         model=MODEL_LLAMA,
+         messages=build_message(question),
+         stream=True
+     )
+     
+     full_text = ""
+     for chunk in response:
+             delta = chunk.choices[0].delta.content or ""
+             full_text += delta
+             print(delta,end="",flush=True)
+     print()
+     return full_text
+ 
+ 
+ 
+def explain(question):
+    results = {}
+    print("\n=== GPT (via OpenRouter) says ===\n")
+    try:
+        results["gpt"] = ask_gpt(question)
+    except Exception as e:
+        print(f"[OpenRouter error: {e}]")
+
+    print("\n=== Llama (Ollama, local) says ===\n")
+    try:
+        results["llama"] = ask_ollama(question)
+    except Exception as e:
+        print(f"[Ollama error: {e}]")
+
+    return results
+
+
+
+
+def main():
+    question = " ".join(sys.argv[1:]) if len(sys.argv) > 1 else input("Enter your technical question: ").strip()
+    if question:
+        explain(question)
+
+
+if __name__ == "__main__":
+    main()
